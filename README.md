@@ -7,7 +7,9 @@
 [img_hsl]: ./imgs/img_hsl.png "Image on HSL Color Space"
 [img_warped]: ./imgs/img_warped.png "Warped Image to Bird-eye's View"
 [img_proc]: ./imgs/process.png "Process Flow"
-
+[img_roi]: ./imgs/roi.png "ROI on the Image"
+[img_curve_fit]: ./imgs/curve_fit.png "Curve Fitting"
+[img_sliding_window]: ./imgs/sliding_window.png "Sliding Window for Line Detection"
 
 The Project
 ---
@@ -37,20 +39,31 @@ In order to fine corners in chessboard, OpenCV's functions, findChessboardCorner
 ### Perspective Transform
 In order to calculate the curvature of lane line, the perspective of the image must be changed to bird-eye's view. The Transformation matrix was estimated by OpenCV's getPerspectiveTransform. The paramters used in getPerspectiveTransform was referred to the lane line detection project which made straight line look straight on bird-eye's view.
 
+![][img_roi]
+
 ![][img_warped]
-![][img_hsl]
 
 ### Image Preprocessing
-The image was processed by two parts:
+The image processing method is consisted of two parts:
 - Filter out lane line by converting to HSL color space
 - Filter out vertical lines by Sobel filter on x-direction
 
-The image was converted to HSL color space due the study in first project which can filter out lane line better than RGB.  Vertical lines were found but with some noised. The ROI implemented in project 1 was applied to filter out irrelevant noises.
+The image was converted to HSL color space, shown as below, due the study in first project that the yellow and white lane lines are easier to be detected than RGB. Vertical lines were detected by Sobel filter but with some noises. The ROI implemented in the first project was applied to filter out irrelevant noises.
+
+ROI: point_left_up = (0.25 * cols, 0), point_right_bottom = (0.75 * cols, rows)
+
+![][img_hsl]
 
 ### Lane Detection & Curvature Estimation
-The lane detection was achieved by the method proposed by the lesson which impressed me by using sliding window. In order to deal with some false detection, the curvatures were recorded as history to calculate the confidence of this round's result. What I implemented is to compare the RMS of the differences between polynomial function's parameter with history. If the sum of RMS is bigger than a thresold, then this round's result will NOT be cached and output the previous result.
+The whole process is shown in the below image, and the detailed information will be discussed later.
 
 ![][img_proc]
 
+The lane detection was achieved by the method proposed by the lesson which impressed me by using sliding window. It used the peaks in the histogram respect to columns as a start point, and seek up to find the center of the pixels in the window. After that, there are a point sets which can be used to find the fittest 2nd order polynomial function to these points.
+In order to deal with some false detection, the curvatures were recorded as history to calculate the confidence of this round's result. What I implemented is to compare the RMS of the differences between polynomial function's parameter with history. If the sum of RMS is bigger than a thresold, then this round's result will NOT be cached and output the previous result.
+
+![][img_sliding_window]
+![][img_curve_fit]
+
 ### Show Detected Result
-I've tested my algorithm on 'project_video.mp4' which looks not bad, but it messed up in 'challenge_video.mp4' which I do not have enough time to figure out how to improve my algorithm.
+I've tested my algorithm on 'project_video.mp4' which looks not bad, but it messed up in 'challenge_video.mp4'. I think it might be some parameters tuning, such as ROI range, which I do not have enough time to figure out how to improve my algorithm.
