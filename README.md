@@ -1,16 +1,13 @@
 ## Advanced Lane Finding
+
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
+[img_raw]: ./imgs/img_raw.png "Raw Image with Chessboard"
+[img_undist]: ./imgs/img_undist.png "Undistorted Image with Chessboard"
+[img_hsl]: ./imgs/img_hsl.png "Image on HSL Color Space"
+[img_warped]: ./imgs/img_warped.png "Warped Image to Bird-eye's View"
+[img_proc]: ./imgs/process.png "Process Flow"
 
-In this project, your goal is to write a software pipeline to identify the lane boundaries in a video, but the main output or product we want you to create is a detailed writeup of the project.  Check out the [writeup template](https://github.com/udacity/CarND-Advanced-Lane-Lines/blob/master/writeup_template.md) for this project and use it as a starting point for creating your own writeup.  
-
-Creating a great writeup:
----
-A great writeup should include the rubric points as well as your description of how you addressed each point.  You should include a detailed description of the code used in each step (with line-number references and code snippets where necessary), and links to other supporting documents or external references.  You should include images in your writeup to demonstrate how your code works with examples.  
-
-All that said, please be concise!  We're not looking for you to write a book here, just a brief description of how you passed each rubric point, and references to the relevant code :). 
-
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup.
 
 The Project
 ---
@@ -26,14 +23,34 @@ The goals / steps of this project are the following:
 * Warp the detected lane boundaries back onto the original image.
 * Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
-The images for camera calibration are stored in the folder called `camera_cal`.  The images in `test_images` are for testing your pipeline on single frames.  If you want to extract more test images from the videos, you can simply use an image writing method like `cv2.imwrite()`, i.e., you can read the video in frame by frame as usual, and for frames you want to save for later you can write to an image file.  
+---
 
-To help the reviewer examine your work, please save examples of the output from each stage of your pipeline in the folder called `ouput_images`, and include a description in your writeup for the project of what each image shows.    The video called `project_video.mp4` is the video your pipeline should work well on.  
+This project was implemented before in school, which I can finish this faster than other projects. There are some parts need to be done.
 
-The `challenge_video.mp4` video is an extra (and optional) challenge for you if you want to test your pipeline under somewhat trickier conditions.  The `harder_challenge.mp4` video is another optional challenge and is brutal!
+### Camera Calibration
+In order to fine corners in chessboard, OpenCV's functions, findChessboardCorners and calibrateCamera, were applied to estimate the distortion coefficients and distance of the camera. The calibration was saved as 'calib_file.p' for later use which only need to calculated once. This assumption is satisfied if the data was recorded after camera calibration ASAP, or the calibration file may failed to calibrate the camera intrinsic parameters perfectly.
 
-If you're feeling ambitious (again, totally optional though), don't stop there!  We encourage you to go out and take video of your own, calibrate your camera and show us how you would implement this project from scratch!
+| Raw | Undistorted|
+|-|-|
+|![][img_raw]|![][img_undist]|
 
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+### Perspective Transform
+In order to calculate the curvature of lane line, the perspective of the image must be changed to bird-eye's view. The Transformation matrix was estimated by OpenCV's getPerspectiveTransform. The paramters used in getPerspectiveTransform was referred to the lane line detection project which made straight line look straight on bird-eye's view.
 
+![][img_warped]
+![][img_hsl]
+
+### Image Preprocessing
+The image was processed by two parts:
+- Filter out lane line by converting to HSL color space
+- Filter out vertical lines by Sobel filter on x-direction
+
+The image was converted to HSL color space due the study in first project which can filter out lane line better than RGB.  Vertical lines were found but with some noised. The ROI implemented in project 1 was applied to filter out irrelevant noises.
+
+### Lane Detection & Curvature Estimation
+The lane detection was achieved by the method proposed by the lesson which impressed me by using sliding window. In order to deal with some false detection, the curvatures were recorded as history to calculate the confidence of this round's result. What I implemented is to compare the RMS of the differences between polynomial function's parameter with history. If the sum of RMS is bigger than a thresold, then this round's result will NOT be cached and output the previous result.
+
+![][img_proc]
+
+### Show Detected Result
+I've tested my algorithm on 'project_video.mp4' which looks not bad, but it messed up in 'challenge_video.mp4' which I do not have enough time to figure out how to improve my algorithm.
